@@ -1,154 +1,59 @@
--- ⚙️ FAST CONFIG (FAST MỚI)
+-- 🔥 FAST ATTACK MELEE (GỘP THẲNG FILE)
+
 getgenv().FastAttackNew = true
-getgenv().FAST_ON = true
-getgenv().FAST_RATE = 0.05     -- mobile ổn: 0.04–0.07
-getgenv().FAST_RANGE = 60
+getgenv()._FastAttackBackup = getgenv()._FastAttackBackup or {}
 
--- ❌ KHÓA TOÀN BỘ FAST CŨ (KHÔNG CẦN BIẾT TÊN)
-if not getgenv().FastAttackNew then return end
+if not getgenv().attackMelee then
+    for _, v in next, getgc(true) do
+        if typeof(v) == "function"
+        and debug.getinfo(v).name == "attackMelee" then
+            getgenv().attackMelee = v
+            break
+        end
+    end
+end
 
--- =============================
-
-local DanhNhanhBuCu36 = {}
-local HacNoCu = {}
-
-local game = game
 local Players = game:GetService("Players")
+local VIM = game:GetService("VirtualInputManager")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+local WeaponData = require(ReplicatedStorage.Modules.WeaponData)
 
-local Player = Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
+task.spawn(function()
+    repeat task.wait() until getgenv().attackMelee
+    while task.wait(0.05) do
+        if not getgenv().FastAttackNew then continue end
 
-local function W(p, n)
-    local _, r = pcall(function() return p:WaitForChild(n) end)
-    return r
-end
+        pcall(function()
+            local Player = Players.LocalPlayer
+            local Char = Player.Character
+            if not Char then return end
 
-local Enemies = W(Workspace, "Enemies")
-local Characters = W(Workspace, "Characters")
-local Modules = W(ReplicatedStorage, "Modules")
-local Net = W(Modules, "Net")
+            local Tool = Char:FindFirstChildOfClass("Tool")
+            if not Tool then return end
 
-DanhNhanhBuCu36.Rate = getgenv().FAST_RATE
+            local WeaponName = Tool:GetAttribute("WeaponName")
+            if not WeaponData[WeaponName] then return end
 
--- ===== FAST CORE =====
-function DanhNhanhBuCu36.PositionScan(ch, folder)
-    local pos = ch:GetPivot().Position
-    local t = {}
-    for _, m in ipairs(folder:GetChildren()) do
-        local hum = m:FindFirstChild("Humanoid")
-        local hrp = m:FindFirstChild("HumanoidRootPart")
-        if hum and hrp and hum.Health > 0 then
-            if (hrp.Position - pos).Magnitude <= getgenv().FAST_RANGE then
-                table.insert(t, m)
+            if not getgenv()._FastAttackBackup.Hitbox then
+                getgenv()._FastAttackBackup.Hitbox =
+                    WeaponData[WeaponName].HitboxMagnitude
             end
-        end
-    end
-    return t
-end
 
-function DanhNhanhBuCu36.HeadExtract(list)
-    local r = {}
-    for _, v in ipairs(list) do
-        local h = v:FindFirstChild("Head") or v.PrimaryPart
-        if h then
-            table.insert(r, {v, h})
-        end
-    end
-    return r
-end
-
-function DanhNhanhBuCu36.CollectAll(ch)
-    local a = DanhNhanhBuCu36.PositionScan(ch, Enemies)
-    local b = DanhNhanhBuCu36.PositionScan(ch, Characters)
-    for _, v in ipairs(b) do table.insert(a, v) end
-    return a
-end
-
-function DanhNhanhBuCu36.FastCore()
-    if not getgenv().FAST_ON then return end
-
-    local ch = Player.Character
-    if not ch then return end
-
-    local tool = ch:FindFirstChildOfClass("Tool")
-    if not tool then return end
-
-    local mobs = DanhNhanhBuCu36.CollectAll(ch)
-    if #mobs == 0 then return end
-
-    local parts = DanhNhanhBuCu36.HeadExtract(mobs)
-    if #parts == 0 then return end
-
-    Net["RE/RegisterAttack"]:FireServer(DanhNhanhBuCu36.Rate)
-    Net["RE/RegisterHit"]:FireServer(parts[1][2], parts)
-end
-
--- ===== BACKUP FAST (ANTI FIX) =====
-local REMOTE_TARGET, REMOTE_ID
-
-for _, f in ipairs({
-    ReplicatedStorage.Util,
-    ReplicatedStorage.Common,
-    ReplicatedStorage.Remotes,
-    ReplicatedStorage.Assets,
-    ReplicatedStorage.FX
-}) do
-    if f then
-        for _, r in ipairs(f:GetChildren()) do
-            if r:IsA("RemoteEvent") and r:GetAttribute("Id") then
-                REMOTE_TARGET = r
-                REMOTE_ID = r:GetAttribute("Id")
-            end
-        end
-    end
-end
-
-function HacNoCu.Execute()
-    if not getgenv().FAST_ON then return end
-
-    local ch = Player.Character
-    if not ch then return end
-    local HRP = ch:FindFirstChild("HumanoidRootPart")
-    if not HRP then return end
-
-    local gather = {}
-
-    local function Scan(folder)
-        for _, mob in ipairs(folder:GetChildren()) do
-            local hum = mob:FindFirstChild("Humanoid")
-            local hr = mob:FindFirstChild("HumanoidRootPart")
-            if hum and hr and hum.Health > 0 and mob ~= ch then
-                if (hr.Position - HRP.Position).Magnitude <= getgenv().FAST_RANGE then
-                    for _, p in ipairs(mob:GetChildren()) do
-                        if p:IsA("BasePart") then
-                            table.insert(gather, {mob, p})
-                        end
-                    end
+            for i, v in next, getupvalues(getgenv().attackMelee) do
+                if typeof(v) == "number" then
+                    setupvalue(getgenv().attackMelee, i, 0)
+                elseif typeof(v) == "boolean" then
+                    setupvalue(getgenv().attackMelee, i, false)
                 end
             end
-        end
-    end
 
-    Scan(Enemies)
-    Scan(Characters)
+            WeaponData[WeaponName].HitboxMagnitude = 120
 
-    local tool = ch:FindFirstChildOfClass("Tool")
-    if #gather > 0 and tool then
-        Net["RE/RegisterAttack"]:FireServer()
-        local head = gather[1][1]:FindFirstChild("Head")
-        if head then
-            Net["RE/RegisterHit"]:FireServer(head, gather, {})
-        end
-    end
-end
+            VIM:SendMouseButtonEvent(0,0,0,true,game,0)
+            VIM:SendMouseButtonEvent(0,0,0,true,game,0)
 
--- ===== START (CHẠY NGẦM – KHÔNG CẦN UI) =====
-task.spawn(function()
-    while task.wait(getgenv().FAST_RATE) do
-        pcall(DanhNhanhBuCu36.FastCore)
-        pcall(HacNoCu.Execute)
+            getgenv().attackMelee()
+        end)
     end
 end)
 _G.FastAttack = true
