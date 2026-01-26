@@ -1,13 +1,8 @@
 -- ⚙️ FAST CONFIG (FAST MỚI)
 getgenv().FastAttackNew = true
 getgenv().FAST_ON = true
-getgenv().FAST_RATE = 0.05     -- mobile ổn: 0.04–0.07
+getgenv().FAST_RATE = 0.01     -- mobile ổn: 0.04–0.07
 getgenv().FAST_RANGE = 60
-
--- ❌ KHÓA TOÀN BỘ FAST CŨ (KHÔNG CẦN BIẾT TÊN)
-if not getgenv().FastAttackNew then return end
-
--- =============================
 
 local DanhNhanhBuCu36 = {}
 local HacNoCu = {}
