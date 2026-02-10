@@ -1,5 +1,5 @@
-local API_URL = "https://rise-evo.xyz"
-local KEY_FILE = "riseapi_checkkey.txt"
+local API_URL = "thinhrobloxhack"
+local KEY_FILE = "thinhrobloxhack"
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
